@@ -73,7 +73,7 @@ func (w *Worker) ProduceGenome(r Round){
 				w.pruneWeaklings()
 				bestFit = w.fittestHappiestMostProductive.fitness
 				if k % 1000 == 0 {
-					fmt.Printf("Worker %v new best: %v\tSigmoid: %v\t%v + %v\n", w.id + 1, bestFit, Sigmoid(bestFit), r.int1, r.int2)
+					fmt.Printf("Worker %v new best: %v\tSigmoid: %v\t%v + %v = %v\n", w.id + 1, bestFit, Sigmoid(bestFit), r.int1, r.int2, w.TestGenome(r))
 				}
 
 		}

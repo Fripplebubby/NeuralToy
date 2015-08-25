@@ -11,6 +11,7 @@ import (
 
 
 func main() {
+	CPUCores = runtime.NumCPU()
 	runtime.GOMAXPROCS(CPUCores)
 	//defer profile.Start(profile.CPUProfile).Stop()
 	
