@@ -3,6 +3,8 @@ package main
 import (
 	"math/rand"
 	"fmt"
+	"encoding/json"
+    "io/ioutil"
 )
 
 type Trainer struct {
@@ -28,6 +30,42 @@ func NewTrainer(trRounds, teRounds int) Trainer {
 		nextWorker,
 		trRounds,
 		teRounds,
+	}
+}
+
+func (train *Trainer) LoadGenome(path string){
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	var weights []float64
+	jsonErr := json.Unmarshal(f, &weights)
+
+	if jsonErr != nil {
+		panic(jsonErr)
+	}
+
+	gen := NewGenome(len(weights))
+	gen.weights = weights
+
+	for _, w := range train.workers {
+		w.NewBest(gen.Copy())
+	}
+}
+
+func (train *Trainer) SaveGenome(path string){
+
+
+	jsonGen, err := json.Marshal(train.workers[0].GetBestGenome().weights)
+
+	if err != nil {
+		panic(err)
+	}
+
+	writeErr := ioutil.WriteFile(path, jsonGen, 0666)
+	if writeErr != nil {
+		panic(writeErr)
 	}
 }
 

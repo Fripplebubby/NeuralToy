@@ -8,8 +8,8 @@ const NumHiddenLayers = 10
 const NumNeuronsPerHiddenLayer = 15
 const NumOutputs = 10
 const NeuronBias = -1
-const NumTrainingRounds = 15
-const NumTestingRounds = 10
+const NumTrainingRounds = 1
+const NumTestingRounds = 0
 
 var NumFitnessGoal = 0.5
 
