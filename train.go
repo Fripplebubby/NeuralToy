@@ -52,6 +52,8 @@ func (train *Trainer) LoadGenome(path string){
 	for _, w := range train.workers {
 		w.NewBest(gen.Copy())
 	}
+
+
 }
 
 func (train *Trainer) SaveGenome(path string){
@@ -67,6 +69,12 @@ func (train *Trainer) SaveGenome(path string){
 	if writeErr != nil {
 		panic(writeErr)
 	}
+
+	jTest, jtErr := json.Marshal(train.workers[0].rounds[0].Serialize())
+	if jtErr != nil {
+		panic(jtErr)
+	}
+	fmt.Printf("%v\n",jTest)
 }
 
 func (train *Trainer) Generate(){
@@ -128,6 +136,30 @@ func NewRound() Round {
 		int1 + int2,
 		intsToInputArray(int1, int2),
 		intToInputArray(int1 + int2),
+	}
+}
+
+type SerialRound struct {
+	int1 int 
+	int2 int 
+	answer int
+}
+
+func (rnd *Round) Serialize() SerialRound {
+	return SerialRound {
+		rnd.int1,
+		rnd.int2,
+		rnd.answer,
+	}
+}
+
+func (sr *SerialRound) DeSerialize() Round {
+	return Round {
+		sr.int1,
+		sr.int2,
+		sr.answer,
+		intsToInputArray(sr.int1, sr.int2),
+		intToInputArray(sr.answer),
 	}
 }
 
