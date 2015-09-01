@@ -11,6 +11,7 @@ type Worker struct {
 	id int
 	nextRound chan Round 
 	newWeights chan Genome
+	newRounds chan []Round
 	pop Population
 	rounds []Round
 	fittestHappiestMostProductive Genome
@@ -27,6 +28,7 @@ func NewWorker(id int) Worker {
 		id, 
 		make (chan Round),
 		make (chan Genome),
+		make (chan []Round),
 		pop,
 		make ([]Round, 0),
 		NewGenome(0),
@@ -44,6 +46,8 @@ func (w *Worker) Work(complete chan<- *Worker){
 				w.NewBest(weights)
 			case <-w.done:
 				complete <- w
+			case rnds := <-w.newRounds:
+				w.InjectRounds(rnds)
 		}
 	}
 }
@@ -53,6 +57,13 @@ func (w *Worker) NewBest(bestGen Genome){
 		p.weights = bestGen.weights
 		// might be necessary to copy fitness, might not
 		p.fitness = bestGen.fitness
+	}
+}
+
+func (w *Worker) InjectRounds(rnd []Round){
+	w.rounds = make([]Round, len(rnd))
+	for i := range w.rounds {
+		w.rounds[i] = rnd[i].Copy()
 	}
 }
 
@@ -73,7 +84,7 @@ func (w *Worker) ProduceGenome(r Round){
 				w.pruneWeaklings()
 				bestFit = w.fittestHappiestMostProductive.fitness
 				if k % 1000 == 0 {
-					fmt.Printf("Worker %v new best: %v\tSigmoid: %v\t%v + %v = %v\n", w.id + 1, bestFit, Sigmoid(bestFit), r.int1, r.int2, w.TestGenome(r))
+					fmt.Printf("Worker %v new best: %v\tSigmoid: %v\t%v + %v = %v\n", w.id + 1, bestFit, Sigmoid(bestFit), r.Int1, r.Int2, w.TestGenome(r))
 				}
 
 		}
@@ -93,8 +104,8 @@ func buildInput(rnds []Round) (in, out [][]float64) {
 	input := make([][]float64, 0)
 	expectedOutput := make([][]float64, 0)
 	for i := len(rnds) - 1; i >= 0; i -- {
-		input = append(input,  rnds[i].input)
-		expectedOutput = append(expectedOutput, rnds[i].expectedOutput)
+		input = append(input,  rnds[i].Input)
+		expectedOutput = append(expectedOutput, rnds[i].ExpectedOutput)
 	}
 	return input, expectedOutput
 }
@@ -117,34 +128,24 @@ func (w *Worker) calcFitness(input, expectedOutput [][]float64, net NeuralNet) {
 func (w *Worker) pruneWeaklings(){
 
 	sort.Sort(sort.Reverse(w.pop))
-	//fmt.Printf("top: %v\tbottom: %v\n", w.pop.Get(0).fitness, w.pop.Get(149).fitness)
 	keepers := w.pop.members[0:PopCutoff]
 	w.pop.Set(keepers)
 
 	keepersInd := 0
 	for i := PopCutoff; i < PopSize; i++ {
-		
 		oldGen := keepers[keepersInd % PopCutoff]
-		/*for j := range oldGen.weights {
-			newGen.weights = oldGen.weights
-		}*/
-		//copy(newGen.weights, oldGen.weights)
-		//newGen.Mutate()
 		newgen := oldGen.Copy()
-
 		newgen.Mutate()
 		w.pop.Add(newgen)
 		keepersInd++
 	}
-
-	//fmt.Println(w.pop.Len())
 	w.fittestHappiestMostProductive = w.pop.members[0]
 }
 
 func (w *Worker) TestGenome(rnd Round) int {
 	net := NewNeuralNet(NumInputs, NumOutputs, NumHiddenLayers, NumNeuronsPerHiddenLayer)
 	net.PutWeights(w.fittestHappiestMostProductive.weights)
-	output := net.Update(rnd.input)
+	output := net.Update(rnd.Input)
 	answer := 0
 	for i := range output {
 		if math.Floor(output[i] + 0.5) >= 1 {

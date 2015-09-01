@@ -21,7 +21,6 @@ func NewTrainer(trRounds, teRounds int) Trainer {
 	}
 
 	nextWorker := make(chan *Worker, CPUCores)	
-
 	for i := range workers {
 		go workers[i].Work(nextWorker)
 	}
@@ -34,14 +33,14 @@ func NewTrainer(trRounds, teRounds int) Trainer {
 	}
 }
 
-func (train *Trainer) LoadGenome(){
-	jsonGen, err := ioutil.ReadFile(StrPath + GenomeReadName)
+func (train *Trainer) LoadGenome(path string){
+	f, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
 
 	var weights []float64
-	jsonErr := json.Unmarshal(jsonGen, &weights)
+	jsonErr := json.Unmarshal(f, &weights)
 
 	if jsonErr != nil {
 		panic(jsonErr)
@@ -54,27 +53,30 @@ func (train *Trainer) LoadGenome(){
 		w.NewBest(gen.Copy())
 	}
 
-	jsonRounds, err2 := ioutil.ReadFile(StrPath + RoundsReadName)
-	if err2 != nil {
-		panic(err2)
-	}
 
-	var rounds []Round
-	jsonErr2 := json.Unmarshal(jsonRounds, &rounds)
-
-	if jsonErr2 != nil {
-		panic(jsonErr2)
-	}
-
-	for _, w := range train.workers {
-		w.newRounds <- rounds
-	}
 }
 
-func (train *Trainer) SaveGenome(){
-	write(train.workers[0].fittestHappiestMostProductive.weights, GenomeWriteName)
-	write(train.workers[0].rounds, RoundsWriteName)
-	fmt.Printf("Saved round %v\n", len(train.workers[0].rounds))
+func (train *Trainer) SaveGenome(path string){
+
+
+	jsonGen, err := json.Marshal(train.workers[0].GetBestGenome().weights)
+
+	if err != nil {
+		panic(err)
+	}
+
+	writeErr := ioutil.WriteFile(path, jsonGen, 0666)
+	if writeErr != nil {
+		panic(writeErr)
+	}
+	
+	testData := train.workers[0].rounds[0].Serialize()
+
+	/*jTest, jtErr := json.Marshal()
+	if jtErr != nil {
+		panic(jtErr)
+	}*/
+	fmt.Printf("%v\n",testData)
 }
 
 func (train *Trainer) Generate(){
@@ -82,67 +84,85 @@ func (train *Trainer) Generate(){
 		nextRound := NewRound()
 		fmt.Println("Dispensing round...")
 		for i := range train.workers {
+			//fmt.Printf("Sending round to #%v\n",i)
 			train.workers[i].nextRound <- nextRound 
 		}
 
 		w := <- train.nextWorker 
+		//fmt.Printf("%v is in first!\n", w.id)
 		skipId := w.id
 		fit := w.GetBestGenome()
 		// copy the best genome out to every worker 
 		for _, wrk := range train.workers {
 			select {
 				case <- train.nextWorker:
+					//fmt.Printf("Heard from %v\n", wrk.id)
 					wrk.newWeights <- fit.Copy()
 					continue
 				default: 
 					if wrk.id != skipId {
+						//fmt.Printf("Sending stop to %v\n", wrk.id)
 						wrk.DropWork() // does not terminate the work loop, but will reset all workers to waiting for the next round
 						<- train.nextWorker // clear the done queue
+						//fmt.Printf("Heard from %v\n", wrk.id)
 						wrk.newWeights <- fit.Copy()
 					}
 			}			
 		}
 		fmt.Println("Received trained response!")
-		train.SaveGenome()
 	}
 
 	fmt.Println("BEGIN TESTING")
 	for test := 0; test < train.teRounds; test++ {
 		nextRound := NewRound()
 		result := train.workers[0].TestGenome(nextRound) 
-		fmt.Printf("%v + %v = %v\n", nextRound.Int1, nextRound.Int2, result)
+		fmt.Printf("%v + %v = %v\n", nextRound.int1, nextRound.int2, result)
 	}
 
 }
 
 type Round struct {		
-	Int1 int
-	Int2 int
-	Answer int
-	Input []float64 // 				[0,0,1,0,1,0,0,0,0,0]  			2 + 4 
-	ExpectedOutput []float64 // 	[0,0,0,0,0,0,1,0,0,0]			= 6 
+	int1 int
+	int2 int
+	answer int
+	input []float64 // [0,0,0,0,1,0,0,0,0,0] = 4 
+	expectedOutput []float64 // same format
 }
 
 func NewRound() Round {
-	Int1 := rand.Intn(6)
-	Int2 := rand.Intn(5)
+	int1 := rand.Intn(6)
+	int2 := rand.Intn(5)
 	return Round {
-		Int1,
-		Int2,
-		Int1 + Int2,
-		intsToInputArray(Int1, Int2),
-		intToInputArray(Int1 + Int2),
+		int1,
+		int2,
+		int1 + int2,
+		intsToInputArray(int1, int2),
+		intToInputArray(int1 + int2),
 	}
 }
 
-func (r *Round) Copy() Round {
-	rnd := NewRound()
-	rnd.Int1 = r.Int1
-	rnd.Int2 = r.Int2
-	rnd.Answer = r.Answer
-	copy(rnd.Input, r.Input)
-	copy(rnd.ExpectedOutput, r.ExpectedOutput)
-	return rnd
+type SerialRound struct {
+	Int1 int 
+	Int2 int 
+	Answer int
+}
+
+func (rnd *Round) Serialize() SerialRound {
+	return SerialRound {
+		rnd.int1,
+		rnd.int2,
+		rnd.answer,
+	}
+}
+
+func (sr *SerialRound) DeSerialize() Round {
+	return Round {
+		sr.Int1,
+		sr.Int2,
+		sr.Answer,
+		intsToInputArray(sr.Int1, sr.Int2),
+		intToInputArray(sr.Answer),
+	}
 }
 
 // [0,0,0,0,1,0,0,0,0,0] = 4 
@@ -157,17 +177,4 @@ func intToInputArray(in int) []float64{
 	toRet := []float64{0,0,0,0,0,0,0,0,0,0}
 	toRet[in] += 1
 	return toRet
-}
-
-func write(data interface{}, name string){
-	jsonGen, err := json.Marshal(data)
-
-	if err != nil {
-		panic(err)
-	}
-
-	writeErr := ioutil.WriteFile(StrPath + name, jsonGen, 0666)
-	if writeErr != nil {
-		panic(writeErr)
-	}
 }

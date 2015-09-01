@@ -23,7 +23,7 @@ func main() {
 	WeightCount = net.GetNumberOfWeights()
 
 	trainer := NewTrainer(NumTrainingRounds, NumTestingRounds)
-	trainer.LoadGenome("/media/joey/Media/go/src/neural/Genome1")
+	trainer.LoadGenome()
 	trainer.Generate()
-	trainer.SaveGenome("/media/joey/Media/go/src/neural/Genome1")
+	trainer.SaveGenome()
 }	

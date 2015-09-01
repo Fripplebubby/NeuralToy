@@ -8,8 +8,14 @@ const NumHiddenLayers = 10
 const NumNeuronsPerHiddenLayer = 15
 const NumOutputs = 10
 const NeuronBias = -1
-const NumTrainingRounds = 1
-const NumTestingRounds = 0
+const NumTrainingRounds = 15
+const NumTestingRounds = 15
+
+const StrPath = "/home/ec2-user/NeuralToy/"
+const GenomeWriteName = "Genome1"
+const RoundsWriteName = "Rounds1"
+const GenomeReadName = "Genome1"
+const RoundsReadName = "Rounds1"
 
 var NumFitnessGoal = 0.5
 
