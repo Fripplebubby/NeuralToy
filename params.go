@@ -17,7 +17,7 @@ const RoundsWriteName = "Rounds1"
 const GenomeReadName = "Genome1"
 const RoundsReadName = "Rounds1"
 
-var NumFitnessGoal = 0.5
+var NumFitnessGoal = 0.001
 
 var WeightCount int // set at runtime 
 var CPUCores int 

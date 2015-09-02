@@ -72,14 +72,13 @@ func (w *Worker) ProduceGenome(r Round){
 	in, out := buildInput(w.rounds)
 	net := NewNeuralNet(NumInputs, NumOutputs, NumHiddenLayers, NumNeuronsPerHiddenLayer)
 	k := 0
-	for bestFit := -1000.0; bestFit < NumFitnessGoal;  {
+	for bestFit := -1000.0; bestFit < NumFitnessGoal; k++; {
 		select {
 			case <-w.done :
 				bestFit = 1
 				return 
 			
 			default:
-				k++
 				w.calcFitness(in, out, net)
 				w.pruneWeaklings()
 				bestFit = w.fittestHappiestMostProductive.fitness
