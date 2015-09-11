@@ -3,13 +3,13 @@ package main
 const PopSize = 150
 const PopCutoff = 25
 const MutationRate = 0.2
-const NumInputs = 10
+const NumInputs = 11
 const NumHiddenLayers = 10
 const NumNeuronsPerHiddenLayer = 15
-const NumOutputs = 10
+const NumOutputs = 21
 const NeuronBias = -1
-const NumTrainingRounds = 15
-const NumTestingRounds = 15
+const NumTrainingRounds = 3000
+const NumTestingRounds = 10
 
 const StrPath = "/home/ec2-user/NeuralToy/"
 const GenomeWriteName = "Genome1"

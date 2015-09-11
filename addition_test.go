@@ -3,9 +3,15 @@ package main
 import (
 	"testing"
 	"math"
+	"fmt"
+	"io/ioutil"
+	"encoding/json"
+	"time"
+	"math/rand"
 )
 
-func TestGenomes(){
+func TestGenomes(*testing.T){
+	rand.Seed(time.Now().UTC().UnixNano())
 	toTest := LoadGenome()
 	net := NewNeuralNet(NumInputs, NumOutputs, NumHiddenLayers, NumNeuronsPerHiddenLayer)
 	for i := 0; i < NumTestingRounds; i++ {
@@ -18,7 +24,7 @@ func TestGenomes(){
 				answer += i
 			}
 		}
-		fmt.Printf("%v + %v = %v\n", nextRound.Int1, nextRound.Int2, nextRound.Answer)
+		fmt.Printf("%v + %v = %v\n", nextRound.Int1, nextRound.Int2, answer)
 	}
 }
 

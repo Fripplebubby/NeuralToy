@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"fmt"
 	"encoding/json"
-    "io/ioutil"
+    	"io/ioutil"
 )
 
 type Trainer struct {
@@ -126,12 +126,20 @@ type Round struct {
 func NewRound() Round {
 	Int1 := rand.Intn(6)
 	Int2 := rand.Intn(5)
+	input := intsToInputArray(Int1, Int2)
+	input[10] = float64(rand.Intn(2)) // multiplication or addition?
+	var output []float64
+	if input[10] == 1 {
+		output = intToInputArray(Int1 * Int2)
+	} else {
+		output = intToInputArray(Int1 + Int2)
+	}
 	return Round {
 		Int1,
 		Int2,
 		Int1 + Int2,
-		intsToInputArray(Int1, Int2),
-		intToInputArray(Int1 + Int2),
+		input,
+		output,
 	}
 }
 
@@ -147,14 +155,14 @@ func (r *Round) Copy() Round {
 
 // [0,0,0,0,1,0,0,0,0,0] = 4 
 func intsToInputArray(in, in2 int) []float64{
-	toRet := []float64{0,0,0,0,0,0,0,0,0,0}
+	toRet := make([]float64, NumInputs)
 	toRet[in] += 1
 	toRet[in2] += 1
 	return toRet
 }
 
 func intToInputArray(in int) []float64{
-	toRet := []float64{0,0,0,0,0,0,0,0,0,0}
+	toRet := make([]float64, NumOutputs)
 	toRet[in] += 1
 	return toRet
 }
