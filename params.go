@@ -19,5 +19,11 @@ const RoundsReadName = "Rounds1"
 
 var NumFitnessGoal = 0.001
 
-var WeightCount int // set at runtime 
 var CPUCores int 
+
+func Symbol(Round r) string {
+	if r.Input[10] == 0 {
+		return "+"
+	}
+	return "x"
+}

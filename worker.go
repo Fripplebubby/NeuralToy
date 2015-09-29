@@ -18,10 +18,10 @@ type Worker struct {
 	done chan bool
 }
 
-func NewWorker(id int) Worker {
+func NewWorker(id, weightCount int) Worker {
 	pop := NewPopulation()
 	for i := 0; i < PopSize; i++ {
-		pop.Add(NewGenome(WeightCount))
+		pop.Add(NewGenome(weightCount))
 	}
 
 	return Worker {
@@ -83,7 +83,13 @@ func (w *Worker) ProduceGenome(r Round){
 				w.pruneWeaklings()
 				bestFit = w.fittestHappiestMostProductive.fitness
 				if k % 1000 == 0 {
-					fmt.Printf("Worker %v new best: %v\tSigmoid: %v\t%v + %v = %v\n", w.id + 1, bestFit, Sigmoid(bestFit), r.Int1, r.Int2, w.TestGenome(r))
+					fmt.Printf("Worker %v new best: %v\tSigmoid: %v\t%v %v %v = %v\n", w.id + 1, bestFit, Sigmoid(bestFit), r.Int1, Symbol(r), r.Int2, w.TestGenome(r))
+				}
+				if k > 25000 {
+					w.rounds = w.rounds[0:len(w.rounds)-1]
+					bestFit = 1
+					fmt.Printf("Failed to produce %v %v %v\n", r.Int1, Symbol(r), r.Int2) 
+					return
 				}
 
 		}

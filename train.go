@@ -14,10 +14,10 @@ type Trainer struct {
 	teRounds int
 }
 
-func NewTrainer(trRounds, teRounds int) Trainer {
+func NewTrainer(trRounds, teRounds, weightCount int) Trainer {
 	workers := make([]Worker, CPUCores)
 	for i := range workers {
-		workers[i] = NewWorker(i)
+		workers[i] = NewWorker(i, weightCount)
 	}
 
 	nextWorker := make(chan *Worker, CPUCores)	
